@@ -1,44 +1,52 @@
-import { create } from 'zustand'
-import { generateId } from '../helpers'
+import { create } from 'zustand';
+import { createJSONStorage, devtools, persist } from 'zustand/middleware';
+import { generateId } from '../helpers';
 
 interface ITask {
     id: string,
     title: string,
 }
 
-interface ToDoStore {
+interface IToDoStore {
     tasks: ITask[];
     createTask: (title: string) => void;
     updateTask: (id: string, title: string) => void;
     removeTask: (id: string) => void;
 }
 
-export const useToDoStore = create<ToDoStore>((set) => ({
-    tasks: [
+export const useToDoStore = create(
+    persist(
+        devtools((set) => ({
+            tasks: [
+                {
+                    id: generateId(),
+                    title: 'Тестовая 1'
+                },
+                {
+                    id: generateId(),
+                    title: 'Тестовая 2'
+                }
+            ],
+            createTask: (title: string) => set((state: IToDoStore) => ({
+                tasks: [...state.tasks, { id: generateId(), title }]
+            })),
+            updateTask: (id: string, title: string) => {
+                set((state: IToDoStore) => ({
+                    tasks: state.tasks.map((task: ITask) => ({
+                        ...task,
+                        title: task.id === id ? title : task.title
+                    }))
+                }))
+            },
+            removeTask: (id: string) => {
+                set((state: IToDoStore) => ({
+                    tasks: state.tasks.filter((task: ITask) => task.id !== id)
+                }))
+            }
+        })),
         {
-            id: generateId(),
-            title: 'Тестовая 1'
-        },
-        {
-            id: generateId(),
-            title: 'Тестовая 2'
+            name: 'toDoList', // имя для localStorage
+            storage: createJSONStorage(() => localStorage), // использование localStorage для хранения
         }
-    ],
-
-    createTask: (title) => set(state => ({ tasks: [...state.tasks, { id: generateId(), title, }] })),
-
-    updateTask: (id, title) => {
-        set((state) => ({
-            tasks: state.tasks.map((task: ITask) => ({
-                ...task,
-                title: task.id === id ? title : task.title,
-            }))
-        }))
-    },
-
-    removeTask: (id) => {
-        set((state) => ({
-            tasks: state.tasks.filter((task) => task.id !== id)
-        }))
-    }
-}))
+    )
+)

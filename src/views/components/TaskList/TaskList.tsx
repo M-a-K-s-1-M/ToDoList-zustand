@@ -71,7 +71,11 @@ export const TaskList: React.FC<ITaskList> = ({ id, title, onDone, onEdited, onR
             <button
                 aria-label='Remove'
                 className='remove-btn'
-                onClick={() => { onRemoved(id) }}
+                onClick={() => {
+                    if (confirm('Вы точо хотитие удалить это напоминание?')) {
+                        onRemoved(id);
+                    }
+                }}
 
             />
         </div >
